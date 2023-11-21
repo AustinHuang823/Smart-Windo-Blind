@@ -77,7 +77,7 @@ void loop() {
   }
 
   if (autoModeSwitch != switchReleaseState) {
-    modeSwitch();
+    autoModeSwitch();
     delay(delayTime_Switches);
   }
 
@@ -110,7 +110,7 @@ int phaseIncrement(bool direction_Stepper, int currentIncrement) {
   return nextPhase; // Ensure the phaseIncrement wraps around within the phase count
 }
 
-void modeSwitch() {
+void autoModeSwitch() {
   /*
   Mode switching between SUMMER, FALL_SPRING, and WINTER.
   Print out current mode.
