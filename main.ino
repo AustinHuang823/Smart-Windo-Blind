@@ -26,7 +26,8 @@ enum State { INITIALIZE, MANUAL, SUMMER, FALL_SPRING, WINTER };
 State currentState = INITIALIZE;
 
 // Proportional control gain
-const float kProp = 3.;  // Kprop value in V/rad
+const float kProp = 3;  // Kprop value in V/rad
+const float ratioMotorToBlind = 1.;
 
 // Timing variables for loop control
 unsigned long previousTime = millis();
@@ -56,15 +57,15 @@ void setup() {
 
 void loop() {
   // Read the current state of the switches
-  boolean autoModeSwitch = digitalRead(switchPin_ModeSwitch);
-  boolean manualModeSwitch = digitalRead(switchPin_ManualMode);
+  boolean autoModeSwitch_status = digitalRead(switchPin_ModeSwitch);
+  boolean manualModeSwitch_status = digitalRead(switchPin_ManualMode);
 
-  if (manualModeSwitch != switchReleaseState) {
+  if (manualModeSwitch_status != switchReleaseState) {
     manualModeSwitch();
     delay(delayTime_Switches);
   }
 
-  if (autoModeSwitch != switchReleaseState) {
+  if (autoModeSwitch_status != switchReleaseState) {
     autoModeSwitch();
     delay(delayTime_Switches);
   }
@@ -82,6 +83,13 @@ void loop() {
 
   // Calculate control signal using proportional control
   float controlSignal = kProp * errorRadians;
+  
+  // Serial.print("  encoder count: ");
+  // Serial.print(counterEncoder);
+  // Serial.print("  desired count: ");
+  // Serial.print(counterDesired);
+  // Serial.print("  control signal: ");
+  // Serial.println(controlSignal);
 
   // Determine motor direction based on the sign of the control signal
   if (controlSignal > 0) {
@@ -111,7 +119,9 @@ void manualModeSwitch() {
   if (currentState == MANUAL) currentState = INITIALIZE;
   else currentState = MANUAL;
 
-  Serial.println("Current mode: " + String(currentState));
+  // Serial.println("Current mode: " + String(currentState));
+  Serial.print("Current mode: ");
+  Serial.println(currentState);
 }
 
 void autoModeSwitch() {
@@ -124,7 +134,9 @@ void autoModeSwitch() {
   else if (currentState == WINTER) currentState = SUMMER;
   else currentState = INITIALIZE;
 
-  Serial.println("Current mode: " + String(currentState));
+  // Serial.println("Current mode: " + String(currentState));
+  Serial.print("Current mode: ");
+  Serial.println(currentState);
 }
 
 int counterDetermination(int& potentiometerValue, int& lightValue, int& temperatureValue){
@@ -140,33 +152,56 @@ int counterDetermination(int& potentiometerValue, int& lightValue, int& temperat
   */
   int counterDesired;
 
-  switch (currentState) {
-    case INITIALIZE:
-      // Initialize currentState to one of the states base on relation of lightValue and temperatureValue
-      float stateFactor = lightValue * 0.1 + temperatureValue * 5;
-      if (stateFactor > 100) currentState = SUMMER;
-      else if (stateFactor > 50) currentState = FALL_SPRING;
-      else currentState = WINTER;
+  // switch (currentState) {
+  //   case INITIALIZE:
+  //     // Initialize currentState to one of the states base on relation of lightValue and temperatureValue
+  //     float stateFactor = lightValue * 0.1 + temperatureValue * 5;
+  //     if (stateFactor > 100) currentState = SUMMER;
+  //     else if (stateFactor > 50) currentState = FALL_SPRING;
+  //     else currentState = WINTER;
 
-      Serial.println("Current mode: " + String(currentState));
-      break;
+  //     // Serial.println("Current mode: " + String(currentState));
+  //     Serial.print("Current mode: ");
+  //     Serial.println(currentState);
+  //     break;
     
-    case MANUAL:
-      // Map value to encoder counts based on potentiometer value
-      counterDesired = map(potentiometerValue, 0, 1023, 0, 12 * 4.4 * 4);
-      break;
+  //   // case MANUAL:
+  //   case MANUAL:
+  //     // Map value to encoder counts based on potentiometer value
+  //     counterDesired = map(potentiometerValue, 0, 1023, 0, 12 * 4.4 * 4 * ratioMotorToBlind);
+  //     Serial.println(potentiometerValue);
+  //     break;
 
-    case SUMMER:
-      counterDesired = 0;
-      break;
+  //   case SUMMER:
+  //     counterDesired = 0;
+  //     break;
       
-    case FALL_SPRING:
-      counterDesired = 0;
-      break;
+  //   case FALL_SPRING:
+  //     counterDesired = 0;
+  //     break;
 
-    case WINTER:
-      counterDesired = 0;
-      break;
+  //   case WINTER:
+  //     counterDesired = 0;
+  //     break;
+  // }
+
+  if (currentState == INITIALIZE) {
+  // Initialize currentState to one of the states based on the relation of lightValue and temperatureValue
+  float stateFactor = lightValue * 0.1 + temperatureValue * 5;
+  if (stateFactor > 100) currentState = SUMMER;
+  else if (stateFactor > 50) currentState = FALL_SPRING;
+  else currentState = WINTER;
+
+  // Serial.println("Current mode: " + String(currentState));
+  Serial.print("Current mode: ");
+  Serial.println(currentState);
+  } 
+  else if (currentState == MANUAL) {
+    // Map value to encoder counts based on potentiometer value
+    counterDesired = map(potentiometerValue, 0, 1023, 0, 12 * 4.4 * 4 * ratioMotorToBlind);
+  } 
+  else if (currentState == SUMMER || currentState == FALL_SPRING || currentState == WINTER) {
+    counterDesired = 0;
   }
 
   return counterDesired;
