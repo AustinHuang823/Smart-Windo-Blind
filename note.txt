@@ -1,0 +1,9 @@
+Today Yutai and I have wired up the circuit and have it tested with our new code, please find the new code on git:
+https://github.com/AustinHuang823/Smart-Windo-Blind.git
+
+With regard to the code, we will need to:
+ - Test and define the relationship between light/temperature and window blind angle.
+ - Update the Kprop value.
+ - Test and update the gear ratio between the motor shaft and window blind.
+
+With regards to the hardware, we are missing a phototransistor now
